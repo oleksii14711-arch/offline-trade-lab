@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Offline Trade Lab — локальний аналіз трейдингу</title>
+<title>Торгова лабораторія — локальний аналіз трейдингу</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Crect%20width='16'%20height='16'%20rx='3'%20fill='%23131a26'/%3E%3Ctext%20x='8'%20y='12'%20font-size='10'%20text-anchor='middle'%20fill='%233b82f6'%3E%E2%97%88%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="topbar">
   <button id="btn-menu" class="icon-btn" aria-label="Меню">☰</button>
-  <div class="brand"><span class="brand-full">◈ Offline Trade Lab</span><span class="brand-short">◈ OTL</span></div>
+  <div class="brand"><span class="brand-full">◈ Торгова лабораторія</span><span class="brand-short">◈ ТЛ</span></div>
   <div class="topbar-right">
-    <select id="dataset-select" class="select" title="Активний dataset"></select>
+    <select id="dataset-select" class="select" title="Активний набір даних"></select>
     <button id="btn-theme" class="btn btn-ghost" title="Світла / темна тема">🌙</button>
   </div>
 </header>
 <div class="layout">
   <aside id="sidebar" class="sidebar">
     <nav>
-      <button class="nav-item active" data-view="dashboard">📊 Dashboard</button>
-      <button class="nav-item" data-view="lab">🧪 Strategy Lab</button>
-      <button class="nav-item" data-view="journal">📓 Trade Journal</button>
-      <button class="nav-item" data-view="import">📥 Data Import</button>
-      <button class="nav-item" data-view="stats">📈 Statistics</button>
-      <button class="nav-item" data-view="settings">⚙️ Settings</button>
+      <button class="nav-item active" data-view="dashboard">📊 Огляд</button>
+      <button class="nav-item" data-view="lab">🧪 Лабораторія стратегії</button>
+      <button class="nav-item" data-view="journal">📓 Журнал угод</button>
+      <button class="nav-item" data-view="import">📥 Імпорт даних</button>
+      <button class="nav-item" data-view="stats">📈 Статистика</button>
+      <button class="nav-item" data-view="settings">⚙️ Налаштування</button>
     </nav>
     <div class="side-foot">
       <div class="side-note">Повністю офлайн.<br>Дані — лише у вашому браузері (IndexedDB).</div>
@@ -35,15 +35,15 @@
 
     <!-- DASHBOARD -->
     <section id="view-dashboard" class="view active">
-      <h1>Dashboard</h1>
+      <h1>Огляд</h1>
       <div id="dash-empty" class="card" hidden>
-        <p>Немає даних. Імпортуйте CSV у розділі <b>Data Import</b> або завантажте sample-дані.</p>
-        <button class="btn" id="btn-load-sample">Завантажити sample CSV</button>
+        <p>Немає даних. Імпортуйте CSV у розділі <b>Імпорт даних</b> або завантажте тестові дані.</p>
+        <button class="btn" id="btn-load-sample">Завантажити тестовий CSV</button>
       </div>
       <div id="dash-cards" class="cards"></div>
       <div class="grid2">
-        <div class="card"><h3>Equity curve (R)</h3><canvas id="ch-equity"></canvas></div>
-        <div class="card"><h3>Wins vs Losses</h3><canvas id="ch-donut"></canvas></div>
+        <div class="card"><h3>Крива капіталу (R)</h3><canvas id="ch-equity"></canvas></div>
+        <div class="card"><h3>Виграші та збитки</h3><canvas id="ch-donut"></canvas></div>
         <div class="card"><h3>Результат по місяцях (R)</h3><canvas id="ch-monthly"></canvas></div>
         <div class="card"><h3>Результат по таймфреймах (R)</h3><canvas id="ch-tf"></canvas></div>
       </div>
@@ -57,18 +57,18 @@
           <div class="table-wrap"><table class="tbl" id="dash-journal"></table></div>
         </div>
       </div>
-      <div class="card"><h3>Summary по таймфреймах</h3><div class="table-wrap"><table class="tbl" id="dash-tf"></table></div></div>
+      <div class="card"><h3>Підсумок по таймфреймах</h3><div class="table-wrap"><table class="tbl" id="dash-tf"></table></div></div>
     </section>
 
     <!-- DATA IMPORT -->
     <section id="view-import" class="view">
-      <h1>Data Import</h1>
+      <h1>Імпорт даних</h1>
       <div class="card">
         <h3>1. Виберіть CSV файл (OHLCV)</h3>
         <input type="file" id="file-csv" accept=".csv,.txt">
         <div class="row">
-          <label>Назва dataset: <input id="inp-dsname" class="input" placeholder="напр. BTC 1h"></label>
-          <label>Delimiter:
+          <label>Назва набору даних: <input id="inp-dsname" class="input" placeholder="напр. BTC 1h"></label>
+          <label>Роздільник:
             <select id="sel-delim" class="select">
               <option value="auto">авто</option>
               <option value=",">кома (,)</option>
@@ -81,16 +81,16 @@
         <div id="import-info" class="muted"></div>
       </div>
       <div class="card" id="card-preview" hidden>
-        <h3>2. Preview (перші 20 рядків)</h3>
+        <h3>2. Попередній перегляд (перші 20 рядків)</h3>
         <div class="table-wrap"><table class="tbl" id="tbl-preview"></table></div>
-        <h3>3. Mapping колонок</h3>
+        <h3>3. Відповідність колонок</h3>
         <div id="map-row" class="map-grid"></div>
         <div id="map-warn" class="warn"></div>
         <button class="btn" id="btn-do-import">Імпортувати</button>
         <div id="import-result" class="muted"></div>
       </div>
       <div class="card">
-        <h3>Datasets</h3>
+        <h3>Набори даних</h3>
         <div class="table-wrap"><table class="tbl" id="tbl-datasets"></table></div>
       </div>
       <div class="card">
@@ -101,48 +101,48 @@
 
     <!-- STRATEGY LAB -->
     <section id="view-lab" class="view">
-      <h1>Strategy Lab <span class="muted small">— лише історична статистика, не прогноз</span></h1>
+      <h1>Лабораторія стратегії <span class="muted small">— лише історична статистика, не прогноз</span></h1>
       <div class="card">
         <h3>Конфігурація двосвічкової моделі</h3>
         <div class="form-grid">
-          <label>Direction
+          <label>Напрям
             <select id="cfg-direction" class="select">
-              <option value="long">Long</option>
-              <option value="short">Short</option>
-              <option value="both" selected>Both</option>
+              <option value="long">Лонг</option>
+              <option value="short">Шорт</option>
+              <option value="both" selected>Обидва</option>
             </select>
           </label>
-          <label>Мін. range, % <input id="cfg-minrange" class="input" type="number" step="0.01" value="0.1"></label>
-          <label>Макс. range, % <input id="cfg-maxrange" class="input" type="number" step="0.1" value="10"></label>
-          <label>Мін. тіло candle 2, % range <input id="cfg-minbody" class="input" type="number" step="1" value="10"></label>
-          <label>Close threshold, % <input id="cfg-threshold" class="input" type="number" step="1" value="70"></label>
-          <label>Entry level, % range <input id="cfg-entry" class="input" type="number" step="1" value="50"></label>
-          <label>Stop level, % range <input id="cfg-stop" class="input" type="number" step="1" value="25"></label>
-          <label>Take Profit, % range <input id="cfg-tp" class="input" type="number" step="1" value="50"></label>
+          <label>Мін. діапазон, % <input id="cfg-minrange" class="input" type="number" step="0.01" value="0.1"></label>
+          <label>Макс. діапазон, % <input id="cfg-maxrange" class="input" type="number" step="0.1" value="10"></label>
+          <label>Мін. тіло свічки 2, % діапазону <input id="cfg-minbody" class="input" type="number" step="1" value="10"></label>
+          <label>Поріг закриття, % <input id="cfg-threshold" class="input" type="number" step="1" value="70"></label>
+          <label>Рівень входу, % діапазону <input id="cfg-entry" class="input" type="number" step="1" value="50"></label>
+          <label>Рівень стопа, % діапазону <input id="cfg-stop" class="input" type="number" step="1" value="25"></label>
+          <label>Тейк-профіт, % діапазону <input id="cfg-tp" class="input" type="number" step="1" value="50"></label>
           <label>Макс. свічок очікування <input id="cfg-wait" class="input" type="number" step="1" value="3"></label>
           <label>Макс. свічок життя угоди <input id="cfg-life" class="input" type="number" step="1" value="10"></label>
           <label><input type="checkbox" id="cfg-useatr"> ATR-фільтр</label>
           <label>ATR період <input id="cfg-atrp" class="input" type="number" step="1" value="14"></label>
           <label>ATR мін. мультиплікатор <input id="cfg-atrm" class="input" type="number" step="0.1" value="0.5"></label>
-          <label>Мін. volume <input id="cfg-minvol" class="input" type="number" step="any" value="0"></label>
-          <label>Напрям candle 1
-            <select id="cfg-c1" class="select"><option value="any">будь-який</option><option value="bull">bullish</option><option value="bear">bearish</option></select>
+          <label>Мін. обсяг <input id="cfg-minvol" class="input" type="number" step="any" value="0"></label>
+          <label>Напрям свічки 1
+            <select id="cfg-c1" class="select"><option value="any">будь-який</option><option value="bull">бичача</option><option value="bear">ведмежа</option></select>
           </label>
-          <label>Напрям candle 2
-            <select id="cfg-c2" class="select"><option value="any">будь-який</option><option value="bull">bullish</option><option value="bear">bearish</option></select>
+          <label>Напрям свічки 2
+            <select id="cfg-c2" class="select"><option value="any">будь-який</option><option value="bull">бичача</option><option value="bear">ведмежа</option></select>
           </label>
-          <label>Body/Range мін., % <input id="cfg-bodyratio" class="input" type="number" step="1" value="0"></label>
+          <label>Тіло/діапазон мін., % <input id="cfg-bodyratio" class="input" type="number" step="1" value="0"></label>
         </div>
         <div class="row">
-          <button class="btn primary" id="btn-run">▶ Run Analysis</button>
+          <button class="btn primary" id="btn-run">▶ Запустити аналіз</button>
           <span id="run-status" class="muted"></span>
         </div>
         <div class="row">
           <select id="sel-preset" class="select"></select>
-          <button class="btn" id="btn-preset-load">Load</button>
-          <button class="btn" id="btn-preset-save">Save</button>
-          <button class="btn" id="btn-preset-rename">Rename</button>
-          <button class="btn danger" id="btn-preset-del">Delete</button>
+          <button class="btn" id="btn-preset-load">Завантажити</button>
+          <button class="btn" id="btn-preset-save">Зберегти</button>
+          <button class="btn" id="btn-preset-rename">Перейменувати</button>
+          <button class="btn danger" id="btn-preset-del">Видалити</button>
         </div>
       </div>
 
@@ -151,16 +151,16 @@
         <div class="row filters">
           <select id="flt-result" class="select">
             <option value="">всі результати</option>
-            <option value="tp">Win (TP)</option>
-            <option value="sl">Loss (SL)</option>
-            <option value="no_entry">No Entry</option>
-            <option value="timeout">Timeout</option>
-            <option value="ambiguous">Ambiguous</option>
+            <option value="tp">Виграш (TP)</option>
+            <option value="sl">Збиток (SL)</option>
+            <option value="no_entry">Без входу</option>
+            <option value="timeout">Тайм-аут</option>
+            <option value="ambiguous">Невизначено</option>
           </select>
           <select id="flt-dir" class="select">
-            <option value="">Long+Short</option>
-            <option value="long">Long</option>
-            <option value="short">Short</option>
+            <option value="">Лонг+Шорт</option>
+            <option value="long">Лонг</option>
+            <option value="short">Шорт</option>
           </select>
           <input id="flt-from" class="input" type="date" title="з дати">
           <input id="flt-to" class="input" type="date" title="по дату">
@@ -176,16 +176,16 @@
       </div>
 
       <div class="card">
-        <h3>Compare — порівняння параметрів (без оптимізації)</h3>
-        <p class="muted">Кожен варіант запускається на тому самому dataset. Система НЕ визначає «найкращий» параметр — лише показує статистику.</p>
+        <h3>Порівняння параметрів (без оптимізації)</h3>
+        <p class="muted">Кожен варіант запускається на тому самому наборі даних. Система НЕ визначає «найкращий» параметр — лише показує статистику.</p>
         <div class="row">
           <label>Параметр
             <select id="cmp-param" class="select">
-              <option value="closeThresholdPct">Close threshold (%)</option>
-              <option value="entryPct">Entry level (%)</option>
-              <option value="stopPct">Stop level (%)</option>
-              <option value="tpPct">Take Profit (%)</option>
-              <option value="minBodyPct">Мін. тіло candle 2 (%)</option>
+              <option value="closeThresholdPct">Поріг закриття (%)</option>
+              <option value="entryPct">Рівень входу (%)</option>
+              <option value="stopPct">Рівень стопа (%)</option>
+              <option value="tpPct">Тейк-профіт (%)</option>
+              <option value="minBodyPct">Мін. тіло свічки 2 (%)</option>
             </select>
           </label>
           <label>Значення через кому <input id="cmp-values" class="input" value="50,70,90" style="width:220px"></label>
@@ -197,7 +197,7 @@
 
     <!-- STATISTICS -->
     <section id="view-stats" class="view">
-      <h1>Statistics</h1>
+      <h1>Статистика</h1>
       <div class="card">
         <div class="row">
           <label>Симуляція: <select id="sel-sim" class="select"></select></label>
@@ -206,28 +206,28 @@
         <div id="stats-cards" class="cards"></div>
       </div>
       <div class="grid2">
-        <div class="card"><h3>Equity curve (R)</h3><canvas id="ch2-equity"></canvas></div>
-        <div class="card"><h3>Wins vs Losses</h3><canvas id="ch2-donut"></canvas></div>
+        <div class="card"><h3>Крива капіталу (R)</h3><canvas id="ch2-equity"></canvas></div>
+        <div class="card"><h3>Виграші та збитки</h3><canvas id="ch2-donut"></canvas></div>
         <div class="card"><h3>По місяцях (R)</h3><canvas id="ch2-monthly"></canvas></div>
-        <div class="card"><h3>По threshold Close (Win Rate %)</h3><canvas id="ch2-thr"></canvas></div>
+        <div class="card"><h3>За порогом закриття (частка виграшів, %)</h3><canvas id="ch2-thr"></canvas></div>
       </div>
-      <div class="card"><h3>Long / Short</h3><div class="table-wrap"><table class="tbl" id="tbl-s-dir"></table></div></div>
-      <div class="card"><h3>По timeframe</h3><div class="table-wrap"><table class="tbl" id="tbl-s-tf"></table></div></div>
+      <div class="card"><h3>Лонг / Шорт</h3><div class="table-wrap"><table class="tbl" id="tbl-s-dir"></table></div></div>
+      <div class="card"><h3>За таймфреймом</h3><div class="table-wrap"><table class="tbl" id="tbl-s-tf"></table></div></div>
       <div class="card"><h3>По роках</h3><div class="table-wrap"><table class="tbl" id="tbl-s-year"></table></div></div>
-      <div class="card"><h3>По місяцях</h3><div class="table-wrap"><table class="tbl" id="tbl-s-month"></table></div></div>
-      <div class="card"><h3>По threshold Close candle 2</h3><div class="table-wrap"><table class="tbl" id="tbl-s-thr"></table></div></div>
-      <div class="card"><h3>По Entry level</h3><div class="table-wrap"><table class="tbl" id="tbl-s-entry"></table></div></div>
+      <div class="card"><h3>За місяцями</h3><div class="table-wrap"><table class="tbl" id="tbl-s-month"></table></div></div>
+      <div class="card"><h3>За порогом закриття свічки 2</h3><div class="table-wrap"><table class="tbl" id="tbl-s-thr"></table></div></div>
+      <div class="card"><h3>За рівнем входу</h3><div class="table-wrap"><table class="tbl" id="tbl-s-entry"></table></div></div>
     </section>
 
     <!-- JOURNAL -->
     <section id="view-journal" class="view">
-      <h1>Trade Journal</h1>
+      <h1>Журнал угод</h1>
       <div class="card">
         <div class="row filters">
-          <input id="j-search" class="input" placeholder="пошук (symbol, strategy, comment)…">
-          <select id="j-side" class="select"><option value="">Long+Short</option><option value="long">Long</option><option value="short">Short</option></select>
-          <select id="j-result" class="select"><option value="">всі</option><option value="win">Win</option><option value="loss">Loss</option><option value="be">BE</option></select>
-          <input id="j-tf" class="input" placeholder="timeframe…" style="width:110px">
+          <input id="j-search" class="input" placeholder="пошук (символ, стратегія, коментар)…">
+          <select id="j-side" class="select"><option value="">Лонг+Шорт</option><option value="long">Лонг</option><option value="short">Шорт</option></select>
+          <select id="j-result" class="select"><option value="">всі</option><option value="win">Виграш</option><option value="loss">Збиток</option><option value="be">Беззбиток</option></select>
+          <input id="j-tf" class="input" placeholder="таймфрейм…" style="width:110px">
           <button class="btn primary" id="btn-j-add">+ Додати угоду</button>
           <button class="btn" id="btn-j-exp">Експорт CSV</button>
           <label class="btn">Імпорт CSV <input type="file" id="file-jimp" accept=".csv" hidden></label>
@@ -236,40 +236,40 @@
       </div>
       <div class="card"><h3>Статистика журналу</h3><div id="jstats-cards" class="cards"></div>
         <div class="grid2">
-          <div><h4>Long / Short</h4><div class="table-wrap"><table class="tbl" id="tbl-j-dir"></table></div></div>
-          <div><h4>По timeframe</h4><div class="table-wrap"><table class="tbl" id="tbl-j-tf"></table></div></div>
-          <div><h4>По стратегіях</h4><div class="table-wrap"><table class="tbl" id="tbl-j-strat"></table></div></div>
-          <div><h4>По місяцях</h4><div class="table-wrap"><table class="tbl" id="tbl-j-month"></table></div></div>
+          <div><h4>Лонг / Шорт</h4><div class="table-wrap"><table class="tbl" id="tbl-j-dir"></table></div></div>
+          <div><h4>За таймфреймом</h4><div class="table-wrap"><table class="tbl" id="tbl-j-tf"></table></div></div>
+          <div><h4>За стратегією</h4><div class="table-wrap"><table class="tbl" id="tbl-j-strat"></table></div></div>
+          <div><h4>За місяцями</h4><div class="table-wrap"><table class="tbl" id="tbl-j-month"></table></div></div>
         </div>
       </div>
     </section>
 
     <!-- SETTINGS -->
     <section id="view-settings" class="view">
-      <h1>Settings</h1>
+      <h1>Налаштування</h1>
       <div class="card">
-        <h3>Ambiguous-свічки</h3>
-        <p class="muted">Якщо в одній свічці High/Low одночасно торкнулись TP і SL, порядок неможливо визначити з OHLC. Результат позначається <b>Ambiguous</b> і не вгадується.</p>
-        <label><input type="radio" name="amb" value="exclude"> Exclude (за замовчуванням — не враховувати в Win Rate / PF)</label><br>
-        <label><input type="radio" name="amb" value="loss"> Count as loss</label><br>
-        <label><input type="radio" name="amb" value="win"> Count as win</label>
+        <h3>Невизначені свічки</h3>
+        <p class="muted">Якщо в одній свічці High/Low одночасно торкнулися TP і SL, порядок неможливо визначити з OHLC. Результат позначається <b>Невизначено</b> і не вгадується.</p>
+        <label><input type="radio" name="amb" value="exclude"> Не враховувати (за замовчуванням — без урахування в частці виграшів / PF)</label><br>
+        <label><input type="radio" name="amb" value="loss"> Вважати збитком</label><br>
+        <label><input type="radio" name="amb" value="win"> Вважати виграшем</label>
       </div>
       <div class="card">
         <h3>Тема</h3>
-        <button class="btn" id="btn-theme2">Перемкнути Light / Dark</button>
+        <button class="btn" id="btn-theme2">Перемкнути: Світла / Темна</button>
       </div>
       <div class="card">
-        <h3>Backup / Restore</h3>
+        <h3>Резервна копія / Відновлення</h3>
         <div class="row">
-          <button class="btn" id="btn-backup">Export Backup (JSON)</button>
-          <label class="btn">Import Backup <input type="file" id="file-backup" accept=".json" hidden></label>
-          <button class="btn danger" id="btn-reset">Reset All Data</button>
+          <button class="btn" id="btn-backup">Експорт резервної копії (JSON)</button>
+          <label class="btn">Імпорт резервної копії <input type="file" id="file-backup" accept=".json" hidden></label>
+          <button class="btn danger" id="btn-reset">Видалити всі дані</button>
         </div>
         <div id="backup-info" class="muted"></div>
       </div>
       <div class="card">
-        <h3>Про backtest</h3>
-        <p class="muted">Backtest симулює лімітний вхід, stop і target на історичних OHLC. Внутрішньобарний порядок невідомий — тому подвійні дотики рахуються Ambiguous. Історична статистика не є прогнозом майбутнього. Див. README.</p>
+        <h3>Про бектест</h3>
+        <p class="muted">Бектест симулює лімітний вхід, стоп і тейк на історичних OHLC. Внутрішньобарний порядок невідомий — тому подвійні дотики рахуються невизначеними. Історична статистика не є прогнозом майбутнього. Див. README.</p>
       </div>
     </section>
 

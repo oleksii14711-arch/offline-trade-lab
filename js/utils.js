@@ -9,6 +9,22 @@ function fmtNum(v, digits) {
   return Number(v).toFixed(d);
 }
 
+// Display-хелпери: внутрішні ключі лишаються англійськими,
+// користувач бачить українські назви.
+function resultLabel(v) {
+  const m = { tp: 'Виграш', sl: 'Збиток', no_entry: 'Без входу', timeout: 'Тайм-аут', ambiguous: 'Невизначено' };
+  return Object.prototype.hasOwnProperty.call(m, v) ? m[v] : String(v === null || v === undefined ? '' : v);
+}
+
+function directionLabel(v) {
+  const m = { long: 'Лонг', short: 'Шорт' };
+  return Object.prototype.hasOwnProperty.call(m, v) ? m[v] : String(v === null || v === undefined ? '' : v);
+}
+
+function journalResultLabel(v) {
+  const m = { win: 'Виграш', loss: 'Збиток', be: 'Беззбиток' };
+  return Object.prototype.hasOwnProperty.call(m, v) ? m[v] : String(v === null || v === undefined ? '' : v);
+}
 // Presentation-шар для Profit Factor. Внутрішня математика (statistics.js)
 // лишається без змін: grossWin>0 за нульових збитків = Infinity.
 // Семантика: збитків нема → знаменник нуль → '∞', а не 'N/A'.
@@ -127,5 +143,5 @@ function tip(text) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fmtNum, fmtPF, fmtInt, fmtPct, fmtDate, fmtDateShort, esc, toCsv, parseCsvLine, uid };
+  module.exports = { fmtNum, fmtPF, fmtInt, fmtPct, fmtDate, fmtDateShort, esc, toCsv, parseCsvLine, uid, resultLabel, directionLabel, journalResultLabel };
 }

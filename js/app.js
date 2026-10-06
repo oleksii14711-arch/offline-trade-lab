@@ -111,7 +111,7 @@ async function refreshDatasets() {
   sel.innerHTML = '';
   if (!S.datasets.length) {
     const o = document.createElement('option');
-    o.value = ''; o.textContent = '— немає даних —';
+    o.value = ''; o.textContent = '— немає наборів —';
     sel.appendChild(o);
     S.activeDatasetId = null;
     S.candlesCache = [];
@@ -166,7 +166,7 @@ async function loadSample() {
     const parsed = parseCsvText(text);
     const map = autoMapColumns(parsed.headers);
     const conv = rowsToCandles(parsed.rows, map);
-    if (!conv.valid.length) { alert('Sample файл не розпізнано.'); return; }
+    if (!conv.valid.length) { alert('Тестовий файл не розпізнано.'); return; }
     const tf = detectTimeframe(conv.valid);
     const id = await dbAdd('datasets', {
       name: 'SAMPLE 1h (синтетика)',
@@ -184,7 +184,7 @@ async function loadSample() {
     await loadActiveCandles();
     renderAll();
   } catch (e) {
-    alert('Не вдалося завантажити sample: ' + e.message);
+    alert('Не вдалося завантажити тестовий файл: ' + e.message);
   }
 }
 
@@ -201,29 +201,29 @@ async function renderDashboard() {
   const journal = await dbGetAll('journal');
 
   let cards = '';
-  cards += metricCard('Свічок (активний dataset)', S.candlesCache.length ? fmtInt(S.candlesCache.length) : '0');
-  cards += metricCard('Сетапів (ост. симуляція)', last ? fmtInt(last.resultsCount) : '—');
+  cards += metricCard('Свічок (активний набір даних)', S.candlesCache.length ? fmtInt(S.candlesCache.length) : '0');
+  cards += metricCard('Сетапів (остання симуляція)', last ? fmtInt(last.resultsCount) : '—');
   cards += metricCard('Симуляцій', fmtInt(sims.length));
   if (last && last.stats) {
     const st = last.stats;
-    cards += metricCard('Win Rate', fmtPct(st.winRate), st.winRate >= 50 ? 'up' : '');
-    cards += metricCard('Loss Rate', fmtPct(st.lossRate), st.lossRate > 50 ? 'down' : '');
-    cards += metricCard('Середній R/R', fmtNum(st.avgR), st.avgR >= 0 ? 'up' : 'down', 'Середній R на угоду серед врахованих угод.');
-    cards += metricCard('Profit Factor', fmtPF(st.profitFactor), '', 'Сума виграшів / сума програшів (в R). >1 — прибутково.');
-    cards += metricCard('Expectancy', fmtNum(st.expectancy) + ' R', st.expectancy >= 0 ? 'up' : 'down', 'Математичне сподівання угоди в R.');
-    cards += metricCard('Max Drawdown', fmtNum(st.maxDrawdown) + ' R', '', 'Максимальна просадка equity-кривої в R.');
+    cards += metricCard('Частка виграшів', fmtPct(st.winRate), st.winRate >= 50 ? 'up' : '');
+    cards += metricCard('Частка збитків', fmtPct(st.lossRate), st.lossRate > 50 ? 'down' : '');
+    cards += metricCard('Середній R', fmtNum(st.avgR), st.avgR >= 0 ? 'up' : 'down', 'Середній R на угоду серед врахованих угод.');
+    cards += metricCard('Профіт-фактор', fmtPF(st.profitFactor), '', 'Сума виграшів / сума програшів (в R). >1 — прибутково.');
+    cards += metricCard('Очікування', fmtNum(st.expectancy) + ' R', st.expectancy >= 0 ? 'up' : 'down', 'Математичне сподівання угоди в R.');
+    cards += metricCard('Макс. просадка', fmtNum(st.maxDrawdown) + ' R', '', 'Максимальна просадка кривої капіталу в R.');
     cards += metricCard('PnL (R)', fmtNum(st.totalR) + ' R', st.totalR >= 0 ? 'up' : 'down');
   } else {
-    cards += metricCard('Win Rate', '—') + metricCard('Profit Factor', '—', '', 'Сума виграшів / сума програшів (в R).') +
-      metricCard('Expectancy', '—', '', 'Математичне сподівання угоди в R.') + metricCard('Max Drawdown', '—', '', 'Максимальна просадка equity в R.');
+    cards += metricCard('Частка виграшів', '—') + metricCard('Профіт-фактор', '—', '', 'Сума виграшів / сума програшів (в R).') +
+      metricCard('Очікування', '—', '', 'Математичне сподівання угоди в R.') + metricCard('Макс. просадка', '—', '', 'Максимальна просадка кривої капіталу в R.');
   }
   $('dash-cards').innerHTML = cards;
 
   // Останні 10 сетапів
   if (last && last.results && last.results.length) {
     const rows = last.results.slice().sort((a, b) => b.ts - a.ts).slice(0, 10);
-    $('dash-setups').innerHTML = '<tr><th>Дата</th><th>Dir</th><th>Result</th><th>R</th></tr>' +
-      rows.map((t) => '<tr><td>' + esc(fmtDate(t.ts)) + '</td><td>' + esc(t.direction) + '</td><td class="r-' + esc(String(t.result)) + '">' + esc(t.result) + '</td><td>' + esc(fmtNum(t.r)) + '</td></tr>').join('');
+    $('dash-setups').innerHTML = '<tr><th>Дата</th><th>Напрям</th><th>Результат</th><th>R</th></tr>' +
+      rows.map((t) => '<tr><td>' + esc(fmtDate(t.ts)) + '</td><td>' + esc(directionLabel(t.direction)) + '</td><td class="r-' + esc(String(t.result)) + '">' + esc(resultLabel(t.result)) + '</td><td>' + esc(fmtNum(t.r)) + '</td></tr>').join('');
     // charts
     try {
       drawEquity($('ch-equity'), last.stats.equity || []);
@@ -246,14 +246,14 @@ async function renderDashboard() {
     } catch (e) { console.warn(e); }
     // summary по TF
     const tfGroups = groupBy(last.results.filter((t) => t.result !== 'no_entry'), (t) => t.timeframe || '?');
-    let html = '<tr><th>TF</th><th>Угод</th><th>Win%</th><th>R</th></tr>';
+    let html = '<tr><th>ТФ</th><th>Угоди</th><th>Вигр., %</th><th>R</th></tr>';
     tfGroups.forEach((arr, k) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       html += '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
     });
     $('dash-tf').innerHTML = html;
   } else {
-    $('dash-setups').innerHTML = '<tr><td class="muted">Немає симуляцій. Запустіть аналіз у Strategy Lab.</td></tr>';
+    $('dash-setups').innerHTML = '<tr><td class="muted">Немає симуляцій. Натисніть «Запустити аналіз» у «Лабораторії стратегії».</td></tr>';
     $('dash-tf').innerHTML = '<tr><td class="muted">Немає даних.</td></tr>';
     try {
       drawEquity($('ch-equity'), []); drawDonut($('ch-donut'), 0, 0);
@@ -264,8 +264,8 @@ async function renderDashboard() {
   // Останні 10 журналу
   journal.sort((a, b) => Number(b.date) - Number(a.date));
   if (journal.length) {
-    $('dash-journal').innerHTML = '<tr><th>Дата</th><th>Symbol</th><th>Side</th><th>PnL R</th></tr>' +
-      journal.slice(0, 10).map((t) => '<tr><td>' + esc(fmtDateShort(t.date)) + '</td><td>' + esc(t.symbol || '') + '</td><td>' + esc(t.side || '') + '</td><td>' + esc(fmtNum(Number(t.pnlR) || 0)) + '</td></tr>').join('');
+    $('dash-journal').innerHTML = '<tr><th>Дата</th><th>Символ</th><th>Напрям</th><th>PnL R</th></tr>' +
+      journal.slice(0, 10).map((t) => '<tr><td>' + esc(fmtDateShort(t.date)) + '</td><td>' + esc(t.symbol || '') + '</td><td>' + esc(directionLabel(t.side)) + '</td><td>' + esc(fmtNum(Number(t.pnlR) || 0)) + '</td></tr>').join('');
   } else {
     $('dash-journal').innerHTML = '<tr><td class="muted">Журнал порожній.</td></tr>';
   }
@@ -325,7 +325,7 @@ function reparsePreview() {
   $('tbl-preview').innerHTML = html;
   $('card-preview').hidden = false;
   const dname = d === ',' ? 'кома' : (d === ';' ? 'крапка з комою' : (d === '\t' ? 'таб' : d));
-  $('import-info').textContent = 'Delimiter: ' + dname + ' | Колонок: ' + headers.length + ' | Рядків: ' + rows.length;
+  $('import-info').textContent = 'Роздільник: ' + dname + ' | Колонок: ' + headers.length + ' | Рядків: ' + rows.length;
   buildMapUI();
 }
 
@@ -365,7 +365,7 @@ function checkMap() {
 
 async function doImport() {
   if (!IMP.rows.length) { alert('Спочатку виберіть CSV.'); return; }
-  if (!checkMap()) { alert('Вкажіть mapping для всіх обовʼязкових колонок.'); return; }
+  if (!checkMap()) { alert('Вкажіть відповідність для всіх обовʼязкових колонок.'); return; }
   const t0 = performance.now();
   const conv = rowsToCandles(IMP.rows, IMP.map);
   const ms = Math.round(performance.now() - t0);
@@ -392,15 +392,15 @@ async function doImport() {
     'Валідних: <b>' + conv.valid.length + '</b> | Пропущено: <b>' + conv.skipped.length + '</b> ' +
     '(NaN: ' + conv.errors.nan + ', дублікати: ' + conv.errors.dup + ', OHLC: ' + conv.errors.ohlc + ', порожні: ' + conv.errors.empty + ')<br>' +
     'Діапазон: ' + esc(fmtDate(conv.valid[0].ts)) + ' … ' + esc(fmtDate(conv.valid[conv.valid.length - 1].ts)) +
-    ' | TF ≈ <b>' + esc(tf.label) + '</b> | ' + ms + ' мс' +
+    ' | ТФ ≈ <b>' + esc(tf.label) + '</b> | ' + ms + ' мс' +
     (sk ? '<br>Приклади пропусків: ' + esc(sk) : '');
   renderAll();
 }
 
 function renderDatasetsTable() {
   const t = $('tbl-datasets');
-  if (!S.datasets.length) { t.innerHTML = '<tr><td class="muted">Поки немає datasets.</td></tr>'; return; }
-  t.innerHTML = '<tr><th>ID</th><th>Назва</th><th>TF</th><th>Свічок</th><th>Діапазон</th><th>Дії</th></tr>' +
+  if (!S.datasets.length) { t.innerHTML = '<tr><td class="muted">Поки немає наборів даних.</td></tr>'; return; }
+  t.innerHTML = '<tr><th>ID</th><th>Назва</th><th>ТФ</th><th>Свічок</th><th>Діапазон</th><th>Дії</th></tr>' +
     S.datasets.map((d) =>
       '<tr><td>' + d.id + '</td><td>' + esc(d.name) + '</td><td>' + esc(d.timeframe || '') + '</td><td>' + fmtInt(d.candleCount || 0) +
       '</td><td>' + esc(fmtDateShort(d.dateFrom)) + ' … ' + esc(fmtDateShort(d.dateTo)) + '</td>' +
@@ -417,10 +417,10 @@ function renderDatasetsTable() {
       await loadActiveCandles(); renderAll();
     } else if (b.dataset.act === 'ren') {
       const d = S.datasets.find((x) => x.id === id);
-      const nn = prompt('Нова назва dataset:', d.name);
+      const nn = prompt('Нова назва набору даних:', d.name);
       if (nn && nn.trim()) { d.name = nn.trim(); await dbPut('datasets', d); await refreshDatasets(); renderDatasetsTable(); }
     } else if (b.dataset.act === 'del') {
-      if (!confirm('Видалити dataset #' + id + ' і всі його свічки?')) return;
+      if (!confirm('Видалити набір даних №' + id + ' і всі його свічки?')) return;
       await dbDelete('datasets', id);
       await dbDeleteCandlesOfDataset(id);
       await refreshDatasets(); renderAll();
@@ -493,9 +493,9 @@ function bindLab() {
 }
 
 async function runAnalysis() {
-  if (!S.activeDatasetId) { alert('Спочатку імпортуйте dataset.'); return; }
+  if (!S.activeDatasetId) { alert('Спочатку імпортуйте набір даних.'); return; }
   if (!S.candlesCache.length) await loadActiveCandles();
-  if (!S.candlesCache.length) { alert('Dataset порожній.'); return; }
+  if (!S.candlesCache.length) { alert('Набір даних порожній.'); return; }
   const cfg = readConfig();
   $('run-status').textContent = 'Аналіз…';
   $('btn-run').disabled = true;
@@ -520,7 +520,7 @@ async function runAnalysis() {
     await refreshSimulations();
     S.resPage = 0;
     applyResFilters();
-    $('run-status').textContent = 'Готово: ' + results.length + ' сетапів, entered ' + stats.entered + ', Win ' + fmtPct(stats.winRate);
+    $('run-status').textContent = 'Готово: ' + results.length + ' сетапів, із входом ' + stats.entered + ', виграшів ' + fmtPct(stats.winRate);
     renderDashboard();
   } catch (e) {
     $('run-status').textContent = 'Помилка: ' + e.message;
@@ -574,18 +574,18 @@ function runWithWorkerFallback(candles, cfg, timeframe, onProgress) {
 
 /* --- results table --- */
 const RES_COLS = [
-  { key: 'date', label: 'Date' },
-  { key: 'timeframe', label: 'Timeframe' },
-  { key: 'direction', label: 'Direction' },
-  { key: 'entry', label: 'Entry' },
-  { key: 'stop', label: 'Stop' },
+  { key: 'date', label: 'Дата' },
+  { key: 'timeframe', label: 'Таймфрейм' },
+  { key: 'direction', label: 'Напрям' },
+  { key: 'entry', label: 'Вхід' },
+  { key: 'stop', label: 'Стоп' },
   { key: 'target', label: 'TP' },
-  { key: 'rangePct', label: 'Range %' },
+  { key: 'rangePct', label: 'Діапазон, %' },
   { key: 'atr', label: 'ATR' },
-  { key: 'result', label: 'Result' },
+  { key: 'result', label: 'Результат' },
   { key: 'r', label: 'R' },
-  { key: 'barsToEntry', label: 'Bars to Entry' },
-  { key: 'barsInTrade', label: 'Bars in Trade' }
+  { key: 'barsToEntry', label: 'Барів до входу' },
+  { key: 'barsInTrade', label: 'Барів в угоді' }
 ];
 
 function applyResFilters() {
@@ -613,7 +613,7 @@ function applyResFilters() {
 function renderResultsTable() {
   const t = $('tbl-results');
   if (!t) return;
-  $('res-count').textContent = S.lastResults.length ? '(' + S.resView.length + ' / ' + S.lastResults.length + ')' : '(немає результатів — натисніть Run Analysis)';
+  $('res-count').textContent = S.lastResults.length ? '(' + S.resView.length + ' / ' + S.lastResults.length + ')' : '(немає результатів — натисніть «Запустити аналіз»)';
   const per = S.resPerPage || 50;
   const pages = Math.max(1, Math.ceil(S.resView.length / per));
   if (S.resPage >= pages) S.resPage = pages - 1;
@@ -621,10 +621,10 @@ function renderResultsTable() {
   const page = S.resView.slice(start, start + per);
   let html = '<tr>' + RES_COLS.map((c) => '<th data-k="' + c.key + '">' + esc(c.label) + (S.resSort.key === c.key ? (S.resSort.dir === 1 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr>';
   for (const r of page) {
-    html += '<tr><td>' + esc(fmtDate(r.date || r.ts)) + '</td><td>' + esc(r.timeframe || '') + '</td><td>' + esc(r.direction) +
+    html += '<tr><td>' + esc(fmtDate(r.date || r.ts)) + '</td><td>' + esc(r.timeframe || '') + '</td><td>' + esc(directionLabel(r.direction)) +
       '</td><td>' + esc(fmtNum(r.entry, 4)) + '</td><td>' + esc(fmtNum(r.stop, 4)) + '</td><td>' + esc(fmtNum(r.target, 4)) +
       '</td><td>' + esc(fmtNum(r.rangePct)) + '</td><td>' + (r.atr === null || r.atr === undefined || Number.isNaN(r.atr) ? '—' : esc(fmtNum(r.atr, 4))) +
-      '</td><td class="r-' + esc(String(r.result)) + '">' + esc(r.result) + '</td><td>' + esc(fmtNum(r.r)) +
+      '</td><td class="r-' + esc(String(r.result)) + '">' + esc(resultLabel(r.result)) + '</td><td>' + esc(fmtNum(r.r)) +
       '</td><td>' + (r.barsToEntry === null || r.barsToEntry === undefined ? '—' : r.barsToEntry) +
       '</td><td>' + (r.barsInTrade || 0) + '</td></tr>';
   }
@@ -651,9 +651,14 @@ function exportResultsCsv() {
   downloadFile('backtest-results.csv', toCsv(rows, cols), 'text/csv;charset=utf-8');
 }
 
+const CMP_PARAM_LABELS = {
+  closeThresholdPct: 'Поріг закриття', entryPct: 'Рівень входу', stopPct: 'Рівень стопа',
+  tpPct: 'Тейк-профіт', minBodyPct: 'Мін. тіло свічки 2'
+};
+
 /* --- compare --- */
 async function runCompare() {
-  if (!S.activeDatasetId) { alert('Спочатку імпортуйте dataset.'); return; }
+  if (!S.activeDatasetId) { alert('Спочатку імпортуйте набір даних.'); return; }
   if (!S.candlesCache.length) await loadActiveCandles();
   const param = $('cmp-param').value;
   const vals = $('cmp-values').value.split(',').map((s) => Number(s.trim())).filter((v) => !Number.isNaN(v));
@@ -665,9 +670,9 @@ async function runCompare() {
     cfg[param] = v;
     const results = runBacktest(S.candlesCache, cfg, S.candlesTf);
     const st = summarizeResults(results, S.ambiguousMode);
-    rows.push({ param: param + ' = ' + v, trades: st.entered, winRate: st.winRate, pf: st.profitFactor, exp: st.expectancy, dd: st.maxDrawdown });
+    rows.push({ param: (CMP_PARAM_LABELS[param] || param) + ' = ' + v, trades: st.entered, winRate: st.winRate, pf: st.profitFactor, exp: st.expectancy, dd: st.maxDrawdown });
   }
-  $('tbl-compare').innerHTML = '<tr><th>Parameter</th><th>Trades</th><th>Win Rate</th><th>Profit Factor</th><th>Expectancy</th><th>Max Drawdown</th></tr>' +
+  $('tbl-compare').innerHTML = '<tr><th>Параметр</th><th>Угоди</th><th>Частка виграшів</th><th>Профіт-фактор</th><th>Очікування</th><th>Макс. просадка</th></tr>' +
     rows.map((r) => '<tr><td>' + esc(r.param) + '</td><td>' + r.trades + '</td><td>' + esc(fmtPct(r.winRate)) + '</td><td>' +
       esc(fmtPF(r.pf)) + '</td><td>' + esc(fmtNum(r.exp)) + ' R</td><td>' + esc(fmtNum(r.dd)) + ' R</td></tr>').join('') +
     '<tr><td colspan="6" class="muted">Таблиця — лише статистичне порівняння. Жоден параметр не позначено «найкращим».</td></tr>';
@@ -732,7 +737,7 @@ function bindStats() {
   $('btn-sim-del').addEventListener('click', async () => {
     const id = Number($('sel-sim').value);
     if (!id) return;
-    if (!confirm('Видалити симуляцію #' + id + '?')) return;
+    if (!confirm('Видалити симуляцію №' + id + '?')) return;
     await dbDelete('simulations', id);
     await refreshSimulations();
     renderStatsView();
@@ -770,25 +775,25 @@ function renderStatsView() {
   const st = sim.stats || summarizeResults(sim.results || [], S.ambiguousMode);
   const res = sim.results || [];
   let h = '';
-  h += metricCard('Total setups', fmtInt(st.total));
-  h += metricCard('Entered trades', fmtInt(st.entered));
-  h += metricCard('Wins', fmtInt(st.wins), 'up');
-  h += metricCard('Losses', fmtInt(st.losses), 'down');
-  h += metricCard('No Entry', fmtInt(st.noEntry));
-  h += metricCard('Timeout', fmtInt(st.timeout));
-  h += metricCard('Ambiguous', fmtInt(st.ambiguous), '', 'Подвійний дотик TP+SL в одному барі. Трактування — у Settings.');
-  h += metricCard('Win Rate', fmtPct(st.winRate));
-  h += metricCard('Loss Rate', fmtPct(st.lossRate));
-  h += metricCard('Average R', fmtNum(st.avgR) + ' R', st.avgR >= 0 ? 'up' : 'down');
-  h += metricCard('Median R', fmtNum(st.medR) + ' R');
-  h += metricCard('Profit Factor', fmtPF(st.profitFactor), '', 'Сума виграшів / сума програшів (в R). >1 — прибутково.');
-  h += metricCard('Expectancy', fmtNum(st.expectancy) + ' R', '', 'Математичне сподівання угоди в R.');
-  h += metricCard('Max Consec Wins', fmtInt(st.maxWinStreak));
-  h += metricCard('Max Consec Losses', fmtInt(st.maxLossStreak));
-  h += metricCard('Max Drawdown', fmtNum(st.maxDrawdown) + ' R', '', 'Максимальна просадка equity в R.');
-  h += metricCard('Avg bars to Entry', fmtNum(st.avgBarsToEntry, 1));
-  h += metricCard('Avg bars in Trade', fmtNum(st.avgBarsInTrade, 1));
-  h += metricCard('Total R', fmtNum(st.totalR) + ' R', st.totalR >= 0 ? 'up' : 'down');
+  h += metricCard('Усього сетапів', fmtInt(st.total));
+  h += metricCard('Угод із входом', fmtInt(st.entered));
+  h += metricCard('Виграші', fmtInt(st.wins), 'up');
+  h += metricCard('Збитки', fmtInt(st.losses), 'down');
+  h += metricCard('Без входу', fmtInt(st.noEntry));
+  h += metricCard('Тайм-аут', fmtInt(st.timeout));
+  h += metricCard('Невизначені', fmtInt(st.ambiguous), '', 'Подвійний дотик TP+SL в одному барі. Трактування — у «Налаштуваннях».');
+  h += metricCard('Частка виграшів', fmtPct(st.winRate));
+  h += metricCard('Частка збитків', fmtPct(st.lossRate));
+  h += metricCard('Середній R', fmtNum(st.avgR) + ' R', st.avgR >= 0 ? 'up' : 'down');
+  h += metricCard('Медіанний R', fmtNum(st.medR) + ' R');
+  h += metricCard('Профіт-фактор', fmtPF(st.profitFactor), '', 'Сума виграшів / сума програшів (в R). >1 — прибутково.');
+  h += metricCard('Очікування', fmtNum(st.expectancy) + ' R', '', 'Математичне сподівання угоди в R.');
+  h += metricCard('Макс. серія виграшів', fmtInt(st.maxWinStreak));
+  h += metricCard('Макс. серія збитків', fmtInt(st.maxLossStreak));
+  h += metricCard('Макс. просадка', fmtNum(st.maxDrawdown) + ' R', '', 'Максимальна просадка кривої капіталу в R.');
+  h += metricCard('Середньо барів до входу', fmtNum(st.avgBarsToEntry, 1));
+  h += metricCard('Середньо барів в угоді', fmtNum(st.avgBarsInTrade, 1));
+  h += metricCard('Сумарний R', fmtNum(st.totalR) + ' R', st.totalR >= 0 ? 'up' : 'down');
   $('stats-cards').innerHTML = h;
 
   try {
@@ -809,47 +814,47 @@ function renderStatsView() {
       (byThr[k] = byThr[k] || []).push(t);
     }
     const tk = Object.keys(byThr).sort((a, b) => Number(a) - Number(b));
-    drawBars($('ch2-thr'), tk.map((k) => 'thr ' + k), tk.map((k) => summarizeResults(byThr[k], S.ambiguousMode).winRate));
+    drawBars($('ch2-thr'), tk.map((k) => 'поріг ' + k), tk.map((k) => summarizeResults(byThr[k], S.ambiguousMode).winRate));
   } catch (e) { console.warn(e); }
 
   // розрізи
   const dirG = groupBy(res, (t) => t.direction || '?');
-  $('tbl-s-dir').innerHTML = '<tr><th>Side</th><th>Всього</th><th>Entered</th><th>Win%</th><th>Avg R</th><th>PF</th><th>R</th></tr>' +
+  $('tbl-s-dir').innerHTML = '<tr><th>Напрям</th><th>Усього</th><th>Із входом</th><th>Вигр., %</th><th>Сер. R</th><th>PF</th><th>R</th></tr>' +
     Array.from(dirG.entries()).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
-      return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + s.entered + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.avgR)) + '</td><td>' + esc(fmtPF(s.profitFactor)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
+      return '<tr><td>' + esc(directionLabel(k)) + '</td><td>' + arr.length + '</td><td>' + s.entered + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.avgR)) + '</td><td>' + esc(fmtPF(s.profitFactor)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
     }).join('');
 
   const tfG = groupBy(res, (t) => t.timeframe || '?');
-  $('tbl-s-tf').innerHTML = '<tr><th>TF</th><th>Всього</th><th>Win%</th><th>R</th></tr>' +
+  $('tbl-s-tf').innerHTML = '<tr><th>ТФ</th><th>Усього</th><th>Вигр., %</th><th>R</th></tr>' +
     Array.from(tfG.entries()).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
     }).join('');
 
   const yG = groupBy(res, (t) => yearKey(t.ts));
-  $('tbl-s-year').innerHTML = '<tr><th>Рік</th><th>Всього</th><th>Win%</th><th>R</th></tr>' +
+  $('tbl-s-year').innerHTML = '<tr><th>Рік</th><th>Усього</th><th>Вигр., %</th><th>R</th></tr>' +
     Array.from(yG.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
     }).join('');
 
   const mG = groupBy(res, (t) => monthKey(t.ts));
-  $('tbl-s-month').innerHTML = '<tr><th>Місяць</th><th>Всього</th><th>Win%</th><th>R</th></tr>' +
+  $('tbl-s-month').innerHTML = '<tr><th>Місяць</th><th>Усього</th><th>Вигр., %</th><th>R</th></tr>' +
     Array.from(mG.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtNum(s.totalR)) + '</td></tr>';
     }).join('');
 
   const thrG = groupBy(res, (t) => String(t.threshold !== undefined ? t.threshold : '?'));
-  $('tbl-s-thr').innerHTML = '<tr><th>Threshold</th><th>Всього</th><th>Win%</th><th>PF</th><th>Exp</th></tr>' +
+  $('tbl-s-thr').innerHTML = '<tr><th>Поріг</th><th>Усього</th><th>Вигр., %</th><th>PF</th><th>Очік.</th></tr>' +
     Array.from(thrG.entries()).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtPF(s.profitFactor)) + '</td><td>' + esc(fmtNum(s.expectancy)) + '</td></tr>';
     }).join('');
 
   const eG = groupBy(res, (t) => String(t.entryLevel !== undefined ? t.entryLevel : '?'));
-  $('tbl-s-entry').innerHTML = '<tr><th>Entry %</th><th>Всього</th><th>Win%</th><th>PF</th><th>Exp</th></tr>' +
+  $('tbl-s-entry').innerHTML = '<tr><th>Вхід, %</th><th>Усього</th><th>Вигр., %</th><th>PF</th><th>Очік.</th></tr>' +
     Array.from(eG.entries()).map(([k, arr]) => {
       const s = summarizeResults(arr, S.ambiguousMode);
       return '<tr><td>' + esc(k) + '</td><td>' + arr.length + '</td><td>' + esc(fmtPct(s.winRate)) + '</td><td>' + esc(fmtPF(s.profitFactor)) + '</td><td>' + esc(fmtNum(s.expectancy)) + '</td></tr>';
@@ -858,13 +863,13 @@ function renderStatsView() {
 
 /* ---------- JOURNAL ---------- */
 const J_FIELDS = [
-  ['date', 'Date', 'date'], ['symbol', 'Symbol', 'text'], ['exchange', 'Exchange', 'text'],
-  ['side', 'Long/Short', 'side'], ['timeframe', 'Timeframe', 'text'],
-  ['entry', 'Entry', 'number'], ['stop', 'Stop', 'number'], ['tp', 'Take Profit', 'number'], ['exit', 'Exit', 'number'],
-  ['size', 'Position size', 'number'], ['riskUsdt', 'Risk USDT', 'number'],
-  ['pnlUsdt', 'PnL USDT', 'number'], ['pnlR', 'PnL R', 'number'],
-  ['strategy', 'Strategy', 'text'], ['result', 'Win/Loss/BE', 'result'],
-  ['tags', 'Теги (через кому)', 'text'], ['mistake', 'Mistake?', 'text'], ['followedPlan', 'Followed plan?', 'yn'],
+  ['date', 'Дата', 'date'], ['symbol', 'Символ', 'text'], ['exchange', 'Біржа', 'text'],
+  ['side', 'Лонг/Шорт', 'side'], ['timeframe', 'Таймфрейм', 'text'],
+  ['entry', 'Вхід', 'number'], ['stop', 'Стоп', 'number'], ['tp', 'Тейк-профіт', 'number'], ['exit', 'Вихід', 'number'],
+  ['size', 'Розмір позиції', 'number'], ['riskUsdt', 'Ризик, USDT', 'number'],
+  ['pnlUsdt', 'PnL, USDT', 'number'], ['pnlR', 'PnL, R', 'number'],
+  ['strategy', 'Стратегія', 'text'], ['result', 'Виграш/Збиток/Беззбиток', 'result'],
+  ['tags', 'Теги (через кому)', 'text'], ['mistake', 'Помилка?', 'text'], ['followedPlan', 'За планом?', 'yn'],
   ['comment', 'Коментар', 'textarea']
 ];
 
@@ -923,7 +928,7 @@ function closeJournalModal() {
 function openJournalModal(rec) {
   S.editingJournalId = rec ? rec.id : null;
   if (!S.modalOpener) S.modalOpener = document.activeElement;
-  $('jmodal-title').textContent = rec ? 'Редагувати угоду #' + rec.id : 'Нова угода';
+  $('jmodal-title').textContent = rec ? 'Редагувати угоду №' + rec.id : 'Нова угода';
   const box = $('jform');
   box.innerHTML = '';
   for (const [key, label, type] of J_FIELDS) {
@@ -932,13 +937,13 @@ function openJournalModal(rec) {
     let inp;
     if (type === 'side') {
       inp = document.createElement('select'); inp.className = 'select';
-      inp.innerHTML = '<option value="long">Long</option><option value="short">Short</option>';
+      inp.innerHTML = '<option value="long">Лонг</option><option value="short">Шорт</option>';
     } else if (type === 'result') {
       inp = document.createElement('select'); inp.className = 'select';
-      inp.innerHTML = '<option value="win">Win</option><option value="loss">Loss</option><option value="be">BE</option>';
+      inp.innerHTML = '<option value="win">Виграш</option><option value="loss">Збиток</option><option value="be">Беззбиток</option>';
     } else if (type === 'yn') {
       inp = document.createElement('select'); inp.className = 'select';
-      inp.innerHTML = '<option value="Yes">Yes</option><option value="No">No</option>';
+      inp.innerHTML = '<option value="Yes">Так</option><option value="No">Ні</option>';
     } else if (type === 'textarea') {
       inp = document.createElement('textarea'); inp.className = 'input'; inp.rows = 2;
     } else {
@@ -993,12 +998,12 @@ function renderJournalView() {
   if (tf) arr = arr.filter((t) => String(t.timeframe || '').toLowerCase().indexOf(tf) !== -1);
   if (q) arr = arr.filter((t) => ((t.symbol || '') + ' ' + (t.strategy || '') + ' ' + (t.comment || '') + ' ' + (t.tags || '')).toLowerCase().indexOf(q) !== -1);
 
-  $('tbl-journal').innerHTML = '<tr><th>Date</th><th>Symbol</th><th>Side</th><th>TF</th><th>Entry</th><th>Exit</th><th>PnL USDT</th><th>PnL R</th><th>Result</th><th>Strategy</th><th>Plan?</th><th>Дії</th></tr>' +
+  $('tbl-journal').innerHTML = '<tr><th>Дата</th><th>Символ</th><th>Напрям</th><th>ТФ</th><th>Вхід</th><th>Вихід</th><th>PnL USDT</th><th>PnL R</th><th>Результат</th><th>Стратегія</th><th>За планом?</th><th>Дії</th></tr>' +
     (arr.map((t) =>
-      '<tr><td>' + esc(fmtDateShort(t.date)) + '</td><td>' + esc(t.symbol || '') + '</td><td>' + esc(t.side || '') + '</td><td>' + esc(t.timeframe || '') +
+      '<tr><td>' + esc(fmtDateShort(t.date)) + '</td><td>' + esc(t.symbol || '') + '</td><td>' + esc(directionLabel(t.side)) + '</td><td>' + esc(t.timeframe || '') +
       '</td><td>' + esc(fmtNum(Number(t.entry) || 0, 4)) + '</td><td>' + esc(fmtNum(Number(t.exit) || 0, 4)) + '</td><td>' + esc(fmtNum(Number(t.pnlUsdt) || 0)) +
-      '</td><td>' + esc(fmtNum(Number(t.pnlR) || 0)) + '</td><td class="r-' + esc(String(t.result).toLowerCase()) + '">' + esc(t.result || '') + '</td><td>' + esc(t.strategy || '') +
-      '</td><td>' + esc(t.followedPlan || '') + '</td><td><button class="btn" data-jedit="' + t.id + '">Edit</button> <button class="btn danger" data-jdel="' + t.id + '">Del</button></td></tr>'
+      '</td><td>' + esc(fmtNum(Number(t.pnlR) || 0)) + '</td><td class="r-' + esc(String(t.result).toLowerCase()) + '">' + esc(journalResultLabel(String(t.result || '').toLowerCase())) + '</td><td>' + esc(t.strategy || '') +
+      '</td><td>' + esc(t.followedPlan === 'Yes' ? 'Так' : (t.followedPlan === 'No' ? 'Ні' : (t.followedPlan || ''))) + '</td><td><button class="btn" data-jedit="' + t.id + '">Редагувати</button> <button class="btn danger" data-jdel="' + t.id + '">Видалити</button></td></tr>'
     ).join('') || '<tr><td colspan="12" class="muted">Немає записів.</td></tr>');
 
   $('tbl-journal').querySelectorAll('[data-jedit]').forEach((b) => b.addEventListener('click', async () => {
@@ -1006,7 +1011,7 @@ function renderJournalView() {
     if (rec) openJournalModal(rec);
   }));
   $('tbl-journal').querySelectorAll('[data-jdel]').forEach((b) => b.addEventListener('click', async () => {
-    if (!confirm('Видалити запис #' + b.getAttribute('data-jdel') + '?')) return;
+    if (!confirm('Видалити запис №' + b.getAttribute('data-jdel') + '?')) return;
     await journalRemove(Number(b.getAttribute('data-jdel')));
     await refreshJournal();
     renderJournalView();
@@ -1017,25 +1022,25 @@ function renderJournalView() {
   const s = summarizeJournal(arr);
   let h = '';
   h += metricCard('Угод', fmtInt(s.count));
-  h += metricCard('Win Rate', fmtPct(s.winRate), s.winRate >= 50 ? 'up' : '');
-  h += metricCard('PnL сумарний', fmtNum(s.pnl) + ' USDT', s.pnl >= 0 ? 'up' : 'down');
+  h += metricCard('Частка виграшів', fmtPct(s.winRate), s.winRate >= 50 ? 'up' : '');
+  h += metricCard('Сумарний PnL', fmtNum(s.pnl) + ' USDT', s.pnl >= 0 ? 'up' : 'down');
   h += metricCard('Сумарний R', fmtNum(s.rTot) + ' R', s.rTot >= 0 ? 'up' : 'down');
-  h += metricCard('Average win', fmtNum(s.avgWin) + ' USDT', 'up');
-  h += metricCard('Average loss', fmtNum(s.avgLoss) + ' USDT', 'down');
-  h += metricCard('Profit Factor', fmtPF(s.profitFactor), '', 'Сума виграшів / сума програшів.');
-  h += metricCard('Expectancy', fmtNum(s.expectancy) + ' R', '', 'Середній R на угоду.');
-  h += metricCard('Max Drawdown', fmtNum(s.maxDrawdown) + ' R', '', 'Максимальна просадка equity в R.');
+  h += metricCard('Середній виграш', fmtNum(s.avgWin) + ' USDT', 'up');
+  h += metricCard('Середній збиток', fmtNum(s.avgLoss) + ' USDT', 'down');
+  h += metricCard('Профіт-фактор', fmtPF(s.profitFactor), '', 'Сума виграшів / сума програшів.');
+  h += metricCard('Очікування', fmtNum(s.expectancy) + ' R', '', 'Середній R на угоду.');
+  h += metricCard('Макс. просадка', fmtNum(s.maxDrawdown) + ' R', '', 'Максимальна просадка кривої капіталу в R.');
   $('jstats-cards').innerHTML = h;
 
   const g = (fn) => groupBy(arr, fn);
   const tbl = (el, mp, valFn) => {
-    $(el).innerHTML = '<tr><th>Група</th><th>N</th><th>Win%</th><th>PnL</th><th>R</th></tr>' +
+    $(el).innerHTML = '<tr><th>Група</th><th>N</th><th>Вигр., %</th><th>PnL</th><th>R</th></tr>' +
       (Array.from(mp.entries()).map(([k, list]) => {
         const ss = summarizeJournal(list);
         return '<tr><td>' + esc(k || '?') + '</td><td>' + list.length + '</td><td>' + esc(fmtPct(ss.winRate)) + '</td><td>' + esc(fmtNum(ss.pnl)) + '</td><td>' + esc(fmtNum(ss.rTot)) + '</td></tr>';
       }).join('') || '<tr><td colspan="5" class="muted">—</td></tr>');
   };
-  tbl('tbl-j-dir', g((t) => t.side || '?'));
+  tbl('tbl-j-dir', g((t) => directionLabel(t.side) || '?'));
   tbl('tbl-j-tf', g((t) => t.timeframe || '?'));
   tbl('tbl-j-strat', g((t) => t.strategy || '?'));
   tbl('tbl-j-month', g((t) => monthKey(t.date)));
@@ -1043,16 +1048,16 @@ function renderJournalView() {
 
 /* ---------- SETTINGS / BACKUP ---------- */
 function formatRestoreReport(rep) {
-  if (!rep) return 'Backup відновлено.';
-  if (rep.mode === 'replace') return 'Backup відновлено (replace): дані замінено повністю.';
-  let msg = 'Backup відновлено (merge): datasets додано ' + rep.datasetsAdded +
+  if (!rep) return 'Резервну копію відновлено.';
+  if (rep.mode === 'replace') return 'Резервну копію відновлено (замінити): дані замінено повністю.';
+  let msg = 'Резервну копію відновлено (обʼєднати): наборів даних додано ' + rep.datasetsAdded +
     ', свічок ' + rep.candlesAdded + ', симуляцій ' + rep.simulationsAdded + '.';
   if (rep.remapped && rep.remapped.length) {
-    msg += ' Перепривʼязка datasetId: ' + rep.remapped.map((m) => m.from + '→' + m.to).join(', ') + '.';
+    msg += ' Перепривʼязка наборів даних: ' + rep.remapped.map((m) => m.from + '→' + m.to).join(', ') + '.';
   }
   const orph = (rep.orphanCandles || 0) + (rep.orphanSimulations || 0);
   if (orph > 0) {
-    msg += ' УВАГА: пропущено записів без відповідного dataset у backup: ' + orph +
+    msg += ' УВАГА: пропущено записів без відповідного набору даних у копії: ' + orph +
       ' (свічок: ' + rep.orphanCandles + ', симуляцій: ' + rep.orphanSimulations + ').';
   }
   return msg;
@@ -1080,10 +1085,11 @@ function syncAmbRadios() {
 }
 
 function bindSettings() {
-  $('btn-backup').addEventListener('click', async () => {    const b = await buildBackup();
+  $('btn-backup').addEventListener('click', async () => {
+    const b = await buildBackup();
     downloadFile('offline-trade-lab-backup-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(b), 'application/json');
     const s = backupSummary(b);
-    $('backup-info').textContent = 'Backup створено: datasets ' + s.datasets + ', свічок ' + s.candles + ', пресетів ' + s.presets + ', симуляцій ' + s.simulations + ', журналу ' + s.journal + '.';
+    $('backup-info').textContent = 'Резервну копію створено: наборів даних ' + s.datasets + ', свічок ' + s.candles + ', пресетів ' + s.presets + ', симуляцій ' + s.simulations + ', журналу ' + s.journal + '.';
   });
   $('file-backup').addEventListener('change', async (e) => {
     const f = e.target.files[0];
@@ -1091,13 +1097,13 @@ function bindSettings() {
     try {
       const b = JSON.parse(await f.text());
       const err = validateBackup(b);
-      if (err) { alert('Backup відхилено: ' + err); return; }
+      if (err) { alert('Резервну копію відхилено: ' + err); return; }
       const s = backupSummary(b);
-      const msg = 'Backup від ' + (b.exportedAt || '?') + ':\n- datasets: ' + s.datasets + '\n- свічок: ' + s.candles + '\n- пресетів: ' + s.presets + '\n- симуляцій: ' + s.simulations + '\n- журналу: ' + s.journal +
-        '\n\nOK — ЗАМІНИТИ всі поточні дані.\nСкасувати (Cancel) — ДОДАТИ до існуючих (merge).';
+      const msg = 'Резервна копія від ' + (b.exportedAt || '?') + ':\n- наборів даних: ' + s.datasets + '\n- свічок: ' + s.candles + '\n- пресетів: ' + s.presets + '\n- симуляцій: ' + s.simulations + '\n- журналу: ' + s.journal +
+        '\n\nOK — ЗАМІНИТИ всі поточні дані.\nСкасувати (Cancel) — ОБʼЄДНАТИ з існуючими (merge).';
       let mode = 'merge';
-      if (confirm(msg + '\n\nНатисніть OK для ЗАМІНИ, Cancel для MERGE.')) mode = 'replace';
-      else if (!confirm('Підтвердіть MERGE (додати backup до існуючих даних)?')) return;
+      if (confirm(msg + '\n\nНатисніть OK для ЗАМІНИ, Cancel для ОБʼЄДНАННЯ.')) mode = 'replace';
+      else if (!confirm('Підтвердити ОБʼЄДНАННЯ (додати копію до існуючих даних)?')) return;
       const rep = await restoreBackup(b, mode);
       S.ambiguousMode = await kvGet('ambiguousMode', 'exclude');
       syncAmbRadios();
@@ -1111,7 +1117,7 @@ function bindSettings() {
     e.target.value = '';
   });
   $('btn-reset').addEventListener('click', async () => {
-    if (!confirm('УВАГА: видалити ВСІ дані (datasets, симуляції, журнал, пресети)?')) return;
+    if (!confirm('УВАГА: видалити ВСІ дані (набори даних, симуляції, журнал, пресети)?')) return;
     if (!confirm('Підтвердіть вдруге: це незворотньо. Видалити все?')) return;
     await resetAllData();
     S.datasets = []; S.candlesCache = []; S.lastResults = []; S.resView = []; S.journal = [];

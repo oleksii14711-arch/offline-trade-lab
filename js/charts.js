@@ -90,7 +90,7 @@ function drawDonut(canvas, wins, losses) {
   ctx.fillText(wins + ' / ' + losses, cx, cy + 5);
   ctx.font = '11px system-ui';
   ctx.fillStyle = cssVar('--muted', '#8b93a7');
-  ctx.fillText('wins / losses', cx, cy + 20);
+  ctx.fillText('виграші / збитки', cx, cy + 20);
   ctx.textAlign = 'left';
 }
 

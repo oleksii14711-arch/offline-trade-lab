@@ -133,6 +133,15 @@ ok('fmtPF(Infinity) is symbol', utils.fmtPF(Infinity) === '∞', utils.fmtPF(Inf
 ok('fmtPF(12.02) numeric', utils.fmtPF(12.0194) === '12.02', utils.fmtPF(12.0194));
 ok('fmtPF(null) is dash', utils.fmtPF(null) === '—');
 ok('fmtNum(Infinity) hardened', utils.fmtNum(Infinity) === '∞');
+// display-хелпери: internal keys незмінні, UI український
+ok('resultLabel tp', utils.resultLabel('tp') === 'Виграш');
+ok('resultLabel sl', utils.resultLabel('sl') === 'Збиток');
+ok('resultLabel no_entry', utils.resultLabel('no_entry') === 'Без входу');
+ok('resultLabel timeout', utils.resultLabel('timeout') === 'Тайм-аут');
+ok('resultLabel ambiguous', utils.resultLabel('ambiguous') === 'Невизначено');
+ok('directionLabel long/short', utils.directionLabel('long') === 'Лонг' && utils.directionLabel('short') === 'Шорт');
+ok('journalResultLabel win/loss/be', utils.journalResultLabel('win') === 'Виграш' && utils.journalResultLabel('loss') === 'Збиток' && utils.journalResultLabel('be') === 'Беззбиток');
+ok('labels fallback raw', utils.resultLabel('weird') === 'weird' && utils.directionLabel('x') === 'x');
 const js2 = ss.summarizeJournal([{ date: T0, result: 'win', pnlUsdt: 100, pnlR: 2 }, { date: T0 + 1, result: 'loss', pnlUsdt: -50, pnlR: -1 }]);
 ok('journal PF=2', Math.abs(js2.profitFactor - 2) < 1e-9);
 
